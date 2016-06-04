@@ -213,11 +213,20 @@ module SequentialComposition =
                         | Some l, Some r -> transform { let! fs = composeBinarySimple l r in return Some fs }
                         | None, None -> transform { return None }
 
-            return { vertexShader = vs; geometryShader = gs; tessControlShader = tcs; tessEvalShader = tev; fragmentShader = fs; originals = List.concat [l.originals; r.originals] }
+            let! cs = match l.computeShader, r.computeShader with
+                        | Some l, None -> transform { return Some l }
+                        | None, Some r -> transform { return Some r }
+                        | Some l, Some r -> error "compute shader composition is not implemented yet"
+                        | None, None -> transform { return None }
+
+            return { vertexShader = vs; geometryShader = gs; fragmentShader = fs;
+                tessControlShader = tcs; tessEvalShader = tev;
+                computeShader = cs;
+                originals = List.concat [l.originals; r.originals] }
         }
 
     let rec compose (l : #seq<Compiled<Effect, 'a>>) =
-        let mutable result = compile { return { vertexShader = None; geometryShader = None; tessControlShader = None; tessEvalShader = None; fragmentShader = None; originals = [] } }
+        let mutable result = compile { return EmptyEffect }
         for e in l do
             result <- composeBinary result e
 

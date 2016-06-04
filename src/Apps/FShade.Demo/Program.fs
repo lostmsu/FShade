@@ -197,6 +197,8 @@ let main argv =
     let effect = [Shaders.simpleTrafoShader |> toEffect
                   Shaders.textureShader |> toEffect] |> compose
 
+    let computeEffect = toEffect Shaders.add
+    let computeCompiled = GLSL.compileEffect GLSL.version410 (Map.ofList[]) computeEffect
 
     let res = GLSL.compileEffect { GLSL.version410 with treatUniformsAsInputs = true } (Map.ofList["Colors", typeof<V4d>]) effect
     match res with

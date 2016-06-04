@@ -655,6 +655,11 @@ module GLSL =
                             | "TessLevelOuter" -> Some "gl_TessLevelOuter"
                             | _ -> None
 
+                    | Compute ->
+                        match s with
+                            | "PrimitiveId" -> Some "gl_PrimitiveID"
+                            | _ -> None
+
                     | Geometry(_) ->
                         match s with
                             | "PrimitiveId" -> Some "gl_PrimitiveIDIn"
@@ -696,7 +701,7 @@ module GLSL =
                             | "TessLevelOuter" -> Some "gl_TessLevelOuter"
                             | _ -> None
 
-                    | TessEval ->
+                    | TessEval | Compute ->
                         None
 
                     | Geometry(_) ->
@@ -720,7 +725,7 @@ module GLSL =
             | TessControl -> "TessControl"
             | TessEval -> "TessEval"
             | Fragment -> "Fragment"
-            
+            | Compute -> "Compute"
 
     //compilation functions
     let private changeIONames (s : Shader) (last : Option<ShaderType>) (next : Option<ShaderType>) =
@@ -1429,6 +1434,20 @@ module GLSL =
                             return Some vsc
                           }
 
+            let! csCode = compile {
+                            let cs = 
+                                match e.computeShader with
+                                    | Some(cs) -> cs
+                                    | None -> { shaderType = ShaderType.Compute; uniforms = []; inputs = Map.empty; outputs = Map.empty; body = Expr.Value(()); inputTopology = None; debugInfo = None }
+
+                            let cs = adjustToConfig config cs None ((if hasgs then Geometry(None, TriangleStrip) else Fragment) |> Some) 
+                            
+                            let! csc = compileShader "CS" cs
+
+                            
+                            return Some csc
+                          }
+
             
 
             let uniforms = Map.empty
@@ -1459,6 +1478,8 @@ module GLSL =
                     | Some(compiled) -> (PersistentHashSet.union types compiled.usedTypes, mapUnion uniforms compiled.uniforms, uniformBufferUnion uniformBuffers compiled.uniformBuffers, sprintf "#ifdef Pixel\r\n%s#endif\r\n\r\n" compiled.code)
                     | None -> types, uniforms, uniformBuffers, ""
 
+            let csCode = match csCode with Some(compiled) -> compiled.code | _ -> ""
+
 
             let! uniformDecls = 
                 if config.createPerStageUniforms then compile { return "" }
@@ -1473,7 +1494,7 @@ module GLSL =
                 let v = config.languageVersion
                 sprintf "%d%d0" v.Major v.Minor
 
-            let completeCode = sprintf "#version %s\r\n%s\r\n%s\r\n%s\r\n%s%s%s%s" versionString extensions typeCode uniformDecls vsCode teCode gsCode fsCode
+            let completeCode = sprintf "#version %s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s%s%s%s" versionString extensions typeCode uniformDecls csCode vsCode teCode gsCode fsCode
 
             return uniforms, completeCode
         }

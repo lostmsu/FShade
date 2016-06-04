@@ -376,7 +376,7 @@ module GLES =
 
     let private getIntrinsicInputName (t : ShaderType) (last : Option<ShaderType>) (s : string) =
         match t with
-            | Vertex ->
+            | Vertex | Compute ->
                 None
             | Geometry(_) ->
                 match s with
@@ -404,6 +404,7 @@ module GLES =
                 match s with
                     | "Positions" -> Some "gl_Position"
                     | _ -> None
+            | Compute -> None
             | Fragment ->
                 match s with
                     | "Colors" -> Some "gl_FragColor"

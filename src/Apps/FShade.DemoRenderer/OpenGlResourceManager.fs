@@ -19,6 +19,7 @@ module OpenGlResourceManager =
             | Fragment -> GLShaderType.FragmentShader
             | TessControl -> GLShaderType.TessControlShader
             | TessEval -> GLShaderType.TessEvaluationShader
+            | Compute -> GLShaderType.ComputeShader
 
     let private versionRx = Regex @"#version.+\r\n"
     let private withDefine (kind : ShaderType) (code : string) =
@@ -31,6 +32,7 @@ module OpenGlResourceManager =
                 | TessEval -> "TessEval", "TEV("
                 | Geometry _ -> "Geometry", "GS("
                 | Fragment -> "Pixel", "PS("
+                | Compute -> "Compute", "CS("
 
 
         let body = code.Substring(m.Index + m.Length).Replace(entry, "main(")

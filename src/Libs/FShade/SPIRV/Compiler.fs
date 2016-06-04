@@ -1733,6 +1733,13 @@ module SpirVCompiler =
                             | "PrimitiveId" -> Some ("gl_PrimitiveID", BuiltIn.PrimitiveId)
                             | "InvocationId" -> Some ("gl_InvocationID", BuiltIn.InvocationId)
                             | _ -> None
+
+                    | Compute ->
+                        match s with
+                            | "PrimitiveId" -> Some ("gl_PrimitiveID", BuiltIn.PrimitiveId)
+                            | "InvocationId" -> Some ("gl_InvocationID", BuiltIn.InvocationId)
+                            | _ -> None
+
                     | TessEval ->
                         match s with
                             | "TessCoord" -> Some ("gl_TessCoord", BuiltIn.TessCoord)
@@ -1774,7 +1781,7 @@ module SpirVCompiler =
 
             | _ ->
                 match t with
-                    | Vertex ->
+                    | Vertex | Compute ->
                         None
 
                     | TessControl ->
@@ -1808,6 +1815,7 @@ module SpirVCompiler =
                     | ShaderType.TessEval -> ExecutionModel.TessellationEvaluation
                     | ShaderType.Geometry _ -> ExecutionModel.Geometry
                     | ShaderType.Fragment -> ExecutionModel.Fragment
+                    | ShaderType.Compute -> ExecutionModel.GLCompute
 
             do! { 
                 build = fun s -> 

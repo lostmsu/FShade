@@ -145,11 +145,12 @@ module EffectCompilation =
     let private toEffectInternalCache = 
         MemoCache (fun (s : Shader) ->
             match s.shaderType with
-                | Vertex -> { vertexShader = Some s; geometryShader = None; tessControlShader = None; tessEvalShader = None; fragmentShader = None; originals = [s] }
-                | Fragment -> { vertexShader = None; geometryShader = None; tessControlShader = None; tessEvalShader = None; fragmentShader = Some s; originals = [s] }
-                | Geometry(maxVertices, t) -> { vertexShader = None; geometryShader = Some(s,t); tessControlShader = None; tessEvalShader = None; fragmentShader = None; originals = [s] } 
-                | TessControl -> { vertexShader = None; geometryShader = None; tessControlShader = Some s; tessEvalShader = None; fragmentShader = None; originals = [s] }
-                | TessEval -> { vertexShader = None; geometryShader = None; tessControlShader = None; tessEvalShader = Some s; fragmentShader = None; originals = [s] }
+                | Vertex -> { EmptyEffect with vertexShader = Some s; originals = [s] }
+                | Fragment -> { EmptyEffect with fragmentShader = Some s; originals = [s] }
+                | Geometry(maxVertices, t) -> { EmptyEffect with geometryShader = Some(s,t); originals = [s] } 
+                | TessControl -> { EmptyEffect with tessControlShader = Some s; originals = [s] }
+                | TessEval -> { EmptyEffect with tessEvalShader = Some s; originals = [s] }
+                | Compute -> { EmptyEffect with computeShader = Some s; originals = [s] }
         )
 
     let toEffectInternal (s : Shader) =
@@ -159,7 +160,7 @@ module EffectCompilation =
     let private createEffect (f : 'a -> Expr<'b>) =
         transform {
             let! shaders = toShader' f
-            let mutable result = { vertexShader = None; geometryShader = None; tessControlShader = None; tessEvalShader = None; fragmentShader = None; originals = shaders }
+            let mutable result = { EmptyEffect with originals = shaders }
             do for s in shaders do
                 match s.shaderType with
                     | Vertex -> result <- { result with vertexShader = Some s }
@@ -167,6 +168,7 @@ module EffectCompilation =
                     | Geometry(maxVertices, t) ->  result <- { result with geometryShader = Some(s, t) } 
                     | TessControl ->  result <- { result with tessControlShader = Some s }
                     | TessEval ->  result <- { result with tessEvalShader = Some s }
+                    | Compute -> result <- { result with computeShader = Some s }
             return result
         }
 
@@ -184,6 +186,7 @@ module EffectCompilation =
           tessEvalShader = shaderWithDebugInfo newEffect.tessEvalShader info
           geometryShader = match newEffect.geometryShader with | Some (gs,t) -> Some ({ gs with debugInfo = Some info }, t) | _ -> None
           fragmentShader = shaderWithDebugInfo newEffect.fragmentShader info
+          computeShader = shaderWithDebugInfo newEffect.computeShader info
           originals = newEffect.originals }
 
     let debugInfoToEffect (info : ShaderDebugInfo) =

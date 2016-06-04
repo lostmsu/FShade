@@ -15,7 +15,7 @@ module Types =
 
     type OutputTopology = Points | LineStrip | TriangleStrip
     type InputTopology = Point | Line | LineAdjacency | Triangle | TriangleAdjacency | Patch of int
-    type ShaderType = Vertex | Geometry of Option<int> * OutputTopology | Fragment | TessControl | TessEval
+    type ShaderType = Vertex | Geometry of Option<int> * OutputTopology | Fragment | TessControl | TessEval | Compute
 
     [<NoComparison>]
     type SourceFileInfo = { sourceFilePath : string; startLine : int; startCol : int; endLine : int; endCol : int }
@@ -27,7 +27,16 @@ module Types =
     type Shader = { shaderType : ShaderType; uniforms : list<Uniform * Var>; inputs : Map<string, Var>; outputs : Map<string, Option<string> * Var>; body : Expr; inputTopology : Option<InputTopology>; debugInfo : Option<ShaderDebugInfo> }
 
     [<NoComparison>]
-    type Effect = { vertexShader : Option<Shader>; geometryShader : Option<Shader * OutputTopology>; tessControlShader : Option<Shader>; tessEvalShader : Option<Shader>; fragmentShader : Option<Shader>; originals : list<Shader> }
+    type Effect = { vertexShader : Option<Shader>; geometryShader : Option<Shader * OutputTopology>; tessControlShader : Option<Shader>; tessEvalShader : Option<Shader>; fragmentShader : Option<Shader>; computeShader : Option<Shader>; originals : list<Shader> }
+
+    let EmptyEffect = {
+        vertexShader = None;
+        geometryShader = None;
+        tessControlShader = None;
+        tessEvalShader = None;
+        fragmentShader = None;
+        computeShader = None;
+        originals = [] }
 
 
     [<NoComparison>]

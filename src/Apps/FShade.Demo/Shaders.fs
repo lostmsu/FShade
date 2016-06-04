@@ -109,5 +109,6 @@ module Shaders =
 
                 return s //V4d(dx0, dy0, 1.0, 1.0)
         }
-    
+
+    let add (a: float, b: float) = compute { return a + b }
 

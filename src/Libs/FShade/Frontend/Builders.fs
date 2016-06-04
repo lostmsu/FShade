@@ -124,6 +124,14 @@ module Builders =
         interface IShaderBuilder with
             member x.ShaderType = ShaderType.Fragment
 
+    type ComputeBuilder() =
+        inherit BaseBuilder()
+        member x.Return(v) = v
+        member x.Quote() = ()
+
+        interface IShaderBuilder with
+            member x.ShaderType = ShaderType.Compute
+
     type GeometryBuilder(size : Option<int>, top : OutputTopology) =
         inherit BaseBuilder()
 
@@ -179,6 +187,8 @@ module Builders =
 
     let tessControl = TessControlBuilder()
     let tessEval = TessEvalBuilder()
+
+    let compute = ComputeBuilder()
 
     let (|BuilderCall|_|) (e : Expr) =
         match e with
